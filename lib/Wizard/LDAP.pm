@@ -9,7 +9,7 @@ use Wizard::LDAP::Config ();
 package Wizard::LDAP;
 
 @Wizard::LDAP::ISA = qw(Wizard::State);
-$Wizard::LDAP::VERSION = '0.1005';
+$Wizard::LDAP::VERSION = '0.1006';
 
 sub init {
     my $self = shift; 
@@ -193,7 +193,7 @@ sub OnChange {
 	$cmd =~ s/\$$k/$s/g;
     }
     my $file = $cmd; $file =~ s/\ .*//g;
-    system($cmd) if(-f $file);
+    `$cmd` if(-f $file);
 }
 
 

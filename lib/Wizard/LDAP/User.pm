@@ -65,6 +65,12 @@ sub ShowMe {
       'options' => ['after 1 day', 'after 2 days', 'after 3 days',
 		    'after 4 days', 'after 5 days', 'always'],
       'descr' => 'Users email forward type'],
+     ['Wizard::Elem::Text', 'name' => 'ldap-user-pop3box',
+      'value' => $user->{'ldap-user-pop3box'},
+      'descr' => 'External POP3 box to fetch mail from'],
+     ['Wizard::Elem::Text', 'name' => 'ldap-user-pop3password',
+      'value' => $user->{'ldap-user-pop3password'},
+      'descr' => 'Password of the external POP3 box'],
      ['Wizard::Elem::Select', 'name' => 'ldap-user-status',
       'value' => $user->{'ldap-user-status'},
       'options' => ['mail', 'ftp', 'admin'],
@@ -155,8 +161,9 @@ sub Action_UserSave {
     my $mailforward = $user->{'ldap-user-mailforward'};
     my $mailforwardtype = $user->{'ldap-user-mailforwardtype'};
     $user->{'ldap-user-objectClass'} = 'posixAccount';
-    $errors .= "Invalid login name $login.\n" unless ($login =~ /^[\d\w]{1,8}$/);
-    $errors .= "Invalid password name $pwd.\n" unless ($pwd =~ /^[\d\w]+$/);
+    $errors .= "Invalid login name: $login.\n" unless ($login =~ /^[\d\w]{1,8}$/);
+    $errors .= "Invalid password: $pwd.\n"
+	if ($prefs->{'ldap-prefs-passwordcheck'}  &&  $pwd =~ /^[\d\w]+$/);
     $errors .= "Invalid status: $status.\n" unless exists($RESOLVE_SHELL->{$status});
     die $errors if $errors;
     $user->{'ldap-user-maildrop'} = $login;
@@ -209,7 +216,6 @@ sub ChooseMenu($wiz) {
       'descr' => 'Select how to proceed'],
      ['Wizard::Elem::Submit', 'value' => 'Proceed', 'name' => 'Action_UserSave',
       'id' => 1]);
-    
 }
 
 
@@ -303,6 +309,12 @@ sub Action_DeleteUser2 {
      ['Wizard::Elem::Data', 
       'value' => $user->{'ldap-user-mailforward'},
       'descr' => 'Users email forward adress'],
+     ['Wizard::Elem::Data',
+      'value' => $user->{'ldap-user-pop3box'},
+      'descr' => 'External POP3 box to fetch mail from'],
+     ['Wizard::Elem::Data',
+      'value' => $user->{'ldap-user-pop3password'},
+      'descr' => 'Password of the external POP3'],
      ['Wizard::Elem::Data', 
       'value' => $user->{'ldap-user-status'},
       'descr' => 'Users status'],
