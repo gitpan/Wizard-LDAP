@@ -33,7 +33,7 @@ sub ShowMe {
       'value' => $user->CreateMe() ?
           'LDAP Wizard: Create a new user' :
           'LDAP Wizard: Edit an existing user'],
-     ['Wizard::Elem::Data', 
+     ['Wizard::Elem::Data',
       'value' => $user->{'ldap-user-uidnumber'},
       'descr' => 'Users UID'],
      ['Wizard::Elem::Data', 
@@ -50,10 +50,10 @@ sub ShowMe {
       'descr' => 'Users password'],
      ['Wizard::Elem::Text', 'name' => 'ldap-user-cn',
       'value' => $user->{'ldap-user-cn'},
-      'descr' => 'Users name'],
+      'descr' => 'Users real name'],
      ['Wizard::Elem::Text', 'name' => 'ldap-user-description',
       'value' => $user->{'ldap-user-description'},
-      'descr' => 'A group attribute for the user'],
+      'descr' => 'A single-line description of the user'],
      ['Wizard::Elem::Text', 'name' => 'ldap-user-mail',
       'value' => $user->{'ldap-user-mail'},
       'descr' => 'Users email adress'],
@@ -187,7 +187,7 @@ sub Action_UserSave {
 	$hook[0] = '-modify';
 	$hook[1]->{'olduser'} = $oldlogin; 
     }
-    $user->DN('user=' . $login . ', ' . $base);
+    $user->DN('cn=' . $login . ', ' . $base);
 
     my $str = $self->OnChange('user', @hook);
     unless($str =~ /^[\s\n]*$/) {
@@ -263,7 +263,7 @@ sub Action_EditUser {
     my($self, $wiz) = @_;
     my($prefs, $admin) = $self->init();
     my $login = $wiz->param('ldap-user') || die "Missing login.";
-    my $dn = "user=$login, " . $prefs->{'ldap-prefs-userbase'};
+    my $dn = "cn=$login, " . $prefs->{'ldap-prefs-userbase'};
     my $user = $self->Load($wiz, $prefs, $admin, $dn);
     $self->ShowMe($wiz, $prefs, $user);
 }
@@ -276,7 +276,7 @@ sub Action_DeleteUser2 {
     my ($self, $wiz) = @_;
     my($prefs, $admin) = $self->init();
     my $login = $wiz->param('ldap-user') || die "Missing login.";
-    my $dn = "user=$login, " . $prefs->{'ldap-prefs-userbase'};
+    my $dn = "cn=$login, " . $prefs->{'ldap-prefs-userbase'};
     my $user = $self->Load($wiz, $prefs, $admin, $dn);
     
     (['Wizard::Elem::Title', 'value' => 'Deleting an LDAP user'],

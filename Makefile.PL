@@ -11,8 +11,11 @@ my %prereq =
 ( 'Data::Dumper' => 0,
   'IO::AtomicFile' => 0,
   'HTML::EP' => 0,
-  'Wizard' => 0
-    );
+  'Wizard' => 0,
+  'Net::Netmask' => 0.05,
+  'Convert::BER' => 0,
+  'Net::LDAP' => 0,
+  );
 
 
 my $cfg;
@@ -73,8 +76,8 @@ sub postamble {
 
 all :: README
 
-README: lib/Wizard/LDAP.pm
-\tpod2text lib/Wizard/LDAP.pm >README
+README: lib/Wizard/LDAP.pod
+\tpod2text lib/Wizard/LDAP.pod >README
 
 };
 }

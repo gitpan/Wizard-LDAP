@@ -111,6 +111,8 @@ sub LDAPBind {
 			                     : ()); 
     die "Could not initialize LDAP object, probable cause: $!" unless(ref($ldap));
     $self->{'_wizard_saveable_ldap'} = $ldap;
+    my $dn = $self->{'adminDN'};
+    my $password = $self->{'adminPassword'};
     $ldap->bind(dn       => $self->{'adminDN'},
 		password => $self->{'adminPassword'}
 		) or die "Cannot bind to LDAP server $@";
@@ -144,8 +146,7 @@ sub new {
     $self->Modified(1);
     $self->DN($dn);
     $self->CreateMe($dn);
-    $self;
-    
+    $self;    
 }
 
 sub DN {

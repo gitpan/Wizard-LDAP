@@ -48,9 +48,10 @@ use Wizard::Shell ();
 use Getopt::Long ();
 
 use vars qw($opt_class);
+$opt_class = "Wizard::LDAP";
+
 Getopt::Long::GetOptions('debug', 'verbose', 'class=s');
 
-die "Missing action" unless $opt_class;
 my $class_pm = $opt_class;
 $class_pm =~ s/\:\:/\//g;
 require "$class_pm.pm";

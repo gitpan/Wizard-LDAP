@@ -9,7 +9,7 @@ use Wizard::LDAP::Config ();
 package Wizard::LDAP;
 
 @Wizard::LDAP::ISA = qw(Wizard::State);
-$Wizard::LDAP::VERSION = '0.1006';
+$Wizard::LDAP::VERSION = '0.1007';
 
 sub init {
     my $self = shift; 
@@ -123,14 +123,16 @@ sub ItemList {
     die "Could not create LDAP object, maybe connecting is currently not "
 	. "possible , probable cause: $@" 
 	    unless ref($ldap);
-    $ldap->bind(dn      => $admin->{'prefs-admin-dn'},
-		password => $admin->{'prefs-admin-password'})
+
+    my $dn = $admin->{'ldap-admin-dn'};
+    my $password = $admin->{'ldap-admin-password'};
+    $ldap->bind(dn      => $dn,	password => $password)
 	|| die "Cannot bind to LDAP server $@";
     my $mesg = $ldap->search(base => $base,
 			     filter => $key . '=*',
 			     scope => 1);
-    die "Following error occured while searching for $base: code=" . $mesg->code
-	. ", error=" . $mesg->error  if $mesg->code;
+    die ("Following error occured while searching for $base: code=",
+	 $mesg->code, ", error=", $mesg->error)  if $mesg->code;
 
     my @items = map { ($_->get($key)) } $mesg->entries;
     $ldap->unbind();
@@ -289,6 +291,10 @@ Another Perl module, available at the same place.
 To talk to the LDAP server, we use Graham Barr's Net::LDAP package.
 It is written in 100% Perl, no underlying C library required.
 
+=item Net::Netmask
+
+Used to determine conformance of host IP´s to a network.
+
 =back
 
 All the above packages are available on any CPAN mirror, for example
@@ -318,12 +324,7 @@ Alternatively you might try using the automatic installation that the
 CPAN module offers you:
 
   perl -MCPAN -e shell
-  install IO::AtomicFile
-  install Bundle::HTML::EP
-  install Bundle::Wizard
-  install Convert::BER
-  install Net::LDAP
-  install Wizard::LDAP
+  install Bundle::Wizard::LDAP
 
 Note that some of the modules, in particular HTML::EP, need additional
 configuration tasks, for example modifying the web servers configuration
@@ -332,7 +333,7 @@ files.
 
 =head2 Some final tasks
 
-You have to create a directory F</etc/LDAP-Wizard> and make it owned
+You have to create a directory F</etc/Wizard-LDAP> and make it owned
 by the httpd user, so that CGI binaries can write into this directory.
 
 Copy the file F<ldap.ep> into your web servers root directory. (I

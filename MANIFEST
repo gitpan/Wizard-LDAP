@@ -1,11 +1,15 @@
+ChangeLog
 MANIFEST			This file
 MANIFEST.SKIP
 README
 README.LDAP
 Makefile.PL			Makefile generator
+lib/Bundle/Wizard/LDAP.pm
 lib/Wizard/LDAP.pm
+lib/Wizard/LDAP.pod
 lib/Wizard/LDAP/Config.pm
 lib/Wizard/LDAP/User.pm
+lib/Wizard/LDAP/User.pod
 lib/Wizard/LDAP/Net.pm
 lib/Wizard/LDAP/Host.pm
 lib/Wizard/SaveAble/LDAP.pm
