@@ -1,0 +1,7 @@
+dn: topic=user, <YOUR_BASE>
+name: user 
+objectclass: topic
+
+dn: topic=net, <YOUR_BASE>
+name: net 
+objectclass: topic
