@@ -55,13 +55,13 @@ configuration.
 
 Possible actions are:
 
-  --prefs	Preferences have changes, read and fix everything.
-		Implies --users, --nets and --hosts.
-  --users	Users have changed, read and fix user settings.
-  --nets        Networks have changed, read and fix network and host
-		settings. Implies --hosts.
-  --hosts	Hosts have changed, read and fix host settings.
-  --help	Print this message
+  --prefs		Preferences have changes, read and fix everything.
+			Implies --nets and --hosts.
+  --nets        	Networks have changed, read and fix network and host
+			settings. Implies --hosts.
+  --hosts		Hosts have changed, read and fix host settings.
+  --help		Print this message
+  --add-user=<user>	Add the given user
 
 Possible options are:
 
@@ -70,6 +70,70 @@ Possible options are:
   --verbose	Turn on verbose mode: Print all actions.
 EOF
     exit 1;
+}
+
+
+############################################################################
+#
+#   Name:    LdapConnect
+#
+#   Purpose: Connect to the LDAP server
+#
+#   Inputs:  $prefs - LDAP wizard prefs
+#
+#   Returns: Net::LDAP object; dies in case of problems
+#
+############################################################################
+
+sub LdapConnect {
+    my $prefs = shift;
+    my $server = $prefs->{'ldap-prefs-serverip'};
+    my $port = $prefs->{'ldap-prefs-serverport'} || 0;
+    my $ldap = Net::LDAP->new($server, 'port' => $port)
+        or die "Failed to connect to LDAP server $server"
+	    . ($port ? ":$port" : "") . ": $!";
+    my $adminDN = $prefs->{'ldap-prefs-adminDN'};
+    my $adminPassword = $prefs->{'ldap-prefs-adminPassword'};
+    $ldap->bind('dn' => $adminDN, 'password' => $adminPassword)
+        or die "Failed to bind as $adminDN: $!";
+    $ldap;
+}
+
+
+############################################################################
+#
+#   Name:    AddUser
+#
+#   Purpose: Add a new user
+#
+#   Inputs:  $prefs - LDAP wizard prefs
+#            $user - User being added
+#
+#   Returns: Nothing; exits in case of problems
+#
+############################################################################
+
+sub AddUser {
+    my($options, $prefs, $user) = @_;
+    my $uidnumber = $options->{'uidnumber'};
+    die "Invalid UID number: $uidnumber" unless $uidnumber =~ /^(\d+)$/;
+    my $gidnumber = $options->{'gidnumber'};
+    die "Invalid GID number: $gidnumber" unless $gidnumber =~ /^(\d+)$/;
+    my $homedir = $options->{'homedir'};
+    if (-d $homedir) {
+	print STDERR "A directory $homedir already exists. Please decide\n";
+	print STDERR "manually, what to do.\n";
+	return;
+    }
+
+    print "Making directory $homedir\n" if $verbose;
+    require File::Path;
+    File::Path::mkpath([$homedir], 0, 0755)
+	or die "Failed to create directory $homedir: $!";
+
+    print "Making directory $homedir owned by $uidnumber.$gidnumber"
+	if $verbose;
+    system "chown", "-R", "$uidnumber.$gidnumber", $homedir unless $debug;
 }
 
 
@@ -89,17 +153,7 @@ EOF
 
 sub ItemList {
     my($prefs, $base, $filter, $ldap) = @_;
-    unless ($ldap) {
-        my $server = $prefs->{'ldap-prefs-serverip'};
-        my $port = $prefs->{'ldap-prefs-serverport'} || 0;
-        $ldap = Net::LDAP->new($server, 'port' => $port)
-	    or die "Failed to connect to LDAP server $server"
-		. ($port ? ":$port" : "") . ": $!";
-        my $adminDN = $prefs->{'ldap-prefs-adminDN'};
-        my $adminPassword = $prefs->{'ldap-prefs-adminPassword'};
-        $ldap->bind('dn' => $adminDN, 'password' => $adminPassword)
-	    or die "Failed to bind as $adminDN: $!";
-    }
+    $ldap ||= LdapConnect($prefs);
     my $msg = $ldap->search('base' => $base, 'filter' => $filter,
 			    'scope' => 1);
     die sprintf("Error while searching: code=%s, error=%s",
@@ -323,24 +377,24 @@ eval {
 	'verbose' => \$verbose
     );
     Getopt::Long::GetOptions(\%o, 'debug', 'help', 'hosts', 'nets', 'prefs',
-			     'users', 'verbose');
+			     'add-user=s', 'homedir=s', 'uidnumber=i',
+			     'gidnumber=i', 'verbose');
     $verbose = 1 if $debug and not $verbose;
 
     if ($o{'help'}) {
 	Usage();
     } elsif ($o{'prefs'}) {
 	MakePrefs(\%o, $cfg);
-	MakeUsers(\%o, $cfg);
 	my $nets = MakeNets(\%o, $cfg);
 	MakeHosts(\%o, $cfg, $nets);
-    } elsif ($o{'users'}) {
-	MakeUsers(\%o, $cfg);
     } elsif ($o{'nets'}) {
 	my $nets = MakeNets(\%o, $cfg);
 	MakeHosts(\%o, $cfg, $nets);
     } elsif ($o{'hosts'}) {
 	my $nets = FindNets(\%o, $cfg);
 	MakeHosts(\%o, $cfg, $nets);
+    } elsif (my $user = $o{'add-user'}) {
+	AddUser(\%o, $cfg, $user);
     } else {
 	Usage();
     }
@@ -357,6 +411,34 @@ if (my $msg = $@) {
         Sys::Syslog::syslog('err', $msg);
     }
 }
+
+__END__
+
+=pod
+
+=head1 NAME
+
+ldapAdmin - Helper tool for the Wizard::LDAP module
+
+
+=head1 SYNOPSIS
+
+  # Create a home directory
+  ldapAdmin --add-user=<user> --uidnumber=<uid> --gidnumer=<gid> \
+	    --homedir=<dir>
+
+
+=head1 DESCRIPTION
+
+This script is created for adjusting the system to the LDAP wizards
+settings.
+
+
+=head1 SEE ALSO
+
+Wizard::LDAP
+
+=cut
 END_OF_SCRIPT
 
 $^W = 1;

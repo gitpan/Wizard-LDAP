@@ -144,8 +144,9 @@ sub Action_UserSave {
     my $errors = '';
     my $login = $user->{'ldap-user-uid'} 
        or ($errors .= "Missing user login.\n");
-    my $pwd = $user->{'ldap-user-userpassword'} 
-       or ($errors .= "Missing user password.\n");
+    my $pwd = $user->{'ldap-user-userpassword'};
+    $errors .= "Empty user password.\n"
+	if $pwd eq '' && $prefs->{'ldap-prefs-passwordcheck'};
     my $uid = $user->{'ldap-user-uidnumber'} 
        or ($errors .= "Missing user UID (internal error).\n");
     my $gid = $user->{'ldap-user-gidnumber'} 
@@ -158,13 +159,14 @@ sub Action_UserSave {
        or ($errors .= "Missing users status.\n");
     my $mail = $user->{'ldap-user-mail'} 
        or ($errors .= "Missing users email adress.\n");
+    $mail .= $prefs->{'ldap-prefs-domain'} unless $mail =~ /\@/;
     my $mailforward = $user->{'ldap-user-mailforward'};
     my $mailforwardtype = $user->{'ldap-user-mailforwardtype'};
     $user->{'ldap-user-objectClass'} = 'posixAccount';
-    $errors .= "Invalid login name: $login.\n" unless ($login =~ /^[\d\w]{1,8}$/);
-    $errors .= "Invalid password: $pwd.\n"
-	if ($prefs->{'ldap-prefs-passwordcheck'}  &&  $pwd =~ /^[\d\w]+$/);
-    $errors .= "Invalid status: $status.\n" unless exists($RESOLVE_SHELL->{$status});
+    $errors .= "Invalid login name: $login.\n"
+	unless ($login =~ /^[\d\w]{1,8}$/);
+    $errors .= "Invalid status: $status.\n"
+	unless exists($RESOLVE_SHELL->{$status});
     die $errors if $errors;
     $user->{'ldap-user-maildrop'} = $login;
     $user->{'ldap-user-maildrop'} = $mailforward
@@ -174,34 +176,45 @@ sub Action_UserSave {
     $user->{'ldap-user-loginshell'} = $RESOLVE_SHELL->{$status};
     $user->{'ldap-user-homedirectory'} = $prefs->{'ldap-prefs-home'} . '/' . $login;
     $user->AttrScalar2Ref('mail', 'mailforward', 'maildrop');
-    my $opts = delete $user->{'_options'} || {};
-    my $opt = delete $user->{'ldap-user-chooseopt'} || '';
-    $opt = $opts->{$opt} if exists($opts->{$opt});
-    
-    my @hook = ('-new', {'user' => $user->{'ldap-user-uid'}, 'options' => $opt, 
-			 'uid' => $user->{'ldap-user-uidnumber'}});
-    if($user->CreateMe()) {
+
+    my $cmd;
+    if ($user->CreateMe()) {
 	$prefs->{'ldap-prefs-nextuid'} = $uid + 1;
 	$prefs->Modified(1);
+	$cmd = $prefs->{'ldap-prefs-userchange-new'};
     } else {
-	$hook[0] = '-modify';
-	$hook[1]->{'olduser'} = $oldlogin; 
+	$cmd = $prefs->{'ldap-prefs-userchange-modify'};
     }
     $user->DN('cn=' . $login . ', ' . $base);
 
-    my $str = $self->OnChange('user', @hook);
-    unless($str =~ /^[\s\n]*$/) {
-	my @lines = split(/\n/, $str);
+    $cmd =~ s/\$olduid\b/$oldlogin/g;
+    $cmd =~ s/\$(\w+)/$user->{"ldap-user-$1"}/g;
+    my $opts = delete $user->{'_options'} || {};
+    my $opt = delete $user->{'ldap-user-chooseopt'} || '';
+    $opt = $opts->{$opt} if exists($opts->{$opt});
+    my $program = $cmd;
+    $program =~ s/\s.*//;
+    print STDERR "LDAP wizard: Running command $cmd\n";
+    my $str = `$cmd 2>&1` if -x $program;
+    if (defined($str)) {
 	my $opts = $user->{'_options'} = {};
 	my $items = [];
-	foreach my $line (@lines) {
-	    next if $line eq '';
-	    die "Cannot parse output: '$str'" unless($line =~ /^Option\:[\s\t]*([^\=]+)\=(.*)$/);
-	    $opts->{$2} = "--$1";
-	    push(@$items, $2);
+	my $msg = '';
+	foreach my $line (split(/\n/, $str)) {
+	    next if $line =~ /^\s*$/;
+	    if ($line =~ /^Message:\s*(.*)$/) {
+		$msg .= "$1<br>\n";
+	    } elsif ($line =~ /^Option\:\s*(.*)=(.*?)\s*$/) {
+		$opts->{$2} = "--$1";
+		push(@$items, $2);
+	    } else {
+		die "Executing command $cmd failed:\n$str\n";
+	    }
 	}
-	$self->Store($wiz);
-	return $self->Action_ChooseMenu($wiz, $items) if @$items;
+	if (@$items) {
+	    $self->Store($wiz);
+	    return $self->ChooseMenu($wiz, $items, $msg) if @$items;
+	}
     }
 
     $user->Modified(1);
@@ -209,12 +222,15 @@ sub Action_UserSave {
     $self->Action_Reset($wiz);
 }
 
-sub ChooseMenu($wiz) {
-    my $self = shift; my $wiz = shift; my $items = shift;
-    (['Wizard::Elem::Title', 'value' => "LDAP Wizard User: Found user datas"],
-     ['Wizard::Elem::Select', 'options' => [@$items], 'name' => 'ldap-user-chooseopt',
+sub ChooseMenu {
+    my($self, $wiz, $items, $msg) = @_; 
+    (['Wizard::Elem::Title', 'value' => "LDAP Wizard User: Decision required"],
+     ['Wizard::Elem::Message', 'msg' => $msg],
+     ['Wizard::Elem::Select', 'options' => [@$items],
+      'name' => 'ldap-user-chooseopt',
       'descr' => 'Select how to proceed'],
-     ['Wizard::Elem::Submit', 'value' => 'Proceed', 'name' => 'Action_UserSave',
+     ['Wizard::Elem::Submit', 'value' => 'Proceed',
+      'name' => 'Action_UserSave',
       'id' => 1]);
 }
 

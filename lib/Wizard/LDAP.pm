@@ -9,7 +9,7 @@ use Wizard::LDAP::Config ();
 package Wizard::LDAP;
 
 @Wizard::LDAP::ISA = qw(Wizard::State);
-$Wizard::LDAP::VERSION = '0.1007';
+$Wizard::LDAP::VERSION = '0.1008';
 
 sub init {
     my $self = shift; 
