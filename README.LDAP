@@ -1,5 +1,5 @@
 This file describes, how you have to setup your LDAP server (openldap)
-for the usage of Wizard::Examples::LDAP.
+for the use of Wizard::LDAP.
 
 1. Append the content of the file slapd.oc.conf.APPEND to the
    slapd.oc.conf file of your ldap server.

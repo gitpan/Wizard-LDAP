@@ -1,12 +1,13 @@
 MANIFEST			This file
 MANIFEST.SKIP
+README
 README.LDAP
 Makefile.PL			Makefile generator
-lib/Wizard/Examples/LDAP.pm
-lib/Wizard/Examples/LDAP/Config.pm
-lib/Wizard/Examples/LDAP/User.pm
-lib/Wizard/Examples/LDAP/Net.pm
-lib/Wizard/Examples/LDAP/Host.pm
+lib/Wizard/LDAP.pm
+lib/Wizard/LDAP/Config.pm
+lib/Wizard/LDAP/User.pm
+lib/Wizard/LDAP/Net.pm
+lib/Wizard/LDAP/Host.pm
 lib/Wizard/SaveAble/LDAP.pm
 ldapAdmin.PL
 ldapWizard.PL

@@ -9,13 +9,13 @@ use Wizard ();
 use Wizard::State ();
 use Wizard::SaveAble ();
 use Wizard::SaveAble::LDAP ();
-use Wizard::Examples::LDAP ();
-use Wizard::Examples::LDAP::Config ();
+use Wizard::LDAP ();
+use Wizard::LDAP::Config ();
 
-@Wizard::Examples::LDAP::Net::ISA = qw(Wizard::Examples::LDAP);
-$Wizard::Examples::LDAP::Net::VERSION = '0.01';
+@Wizard::LDAP::Net::ISA = qw(Wizard::LDAP);
+$Wizard::LDAP::Net::VERSION = '0.01';
 
-package Wizard::Examples::LDAP::Net;
+package Wizard::LDAP::Net;
 
 sub init {
     my $self = shift; 
@@ -66,7 +66,7 @@ sub ShowMe {
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'name' => 'Action_Reset',
       'value' => 'Return to Net menu', 'id' => 98],
-     ['Wizard::Elem::Submit', 'name' => 'Wizard::Examples::LDAP::Action_Reset',
+     ['Wizard::Elem::Submit', 'name' => 'Wizard::LDAP::Action_Reset',
       'value' => 'Return to top menu', 'id' => 99]);
 }
 
@@ -94,7 +94,7 @@ sub Action_Reset {
       'id' => 4],
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'name' => 'Wizard::Examples::LDAP::Action_Reset',
+      'name' => 'Wizard::LDAP::Action_Reset',
       'id' => 98],
      ['Wizard::Elem::Submit', 'value' => 'Exit LDAP Wizard',
       'id' => 99]);
@@ -187,7 +187,7 @@ sub Action_NetSave {
 sub Action_HostMenu {
     my $self = shift; my $wiz = shift;
     $self->Action_ModifyNet($wiz, 'Manage hosts in this net',
-			     'Wizard::Examples::LDAP::Host::Action_Enter');
+			     'Wizard::LDAP::Host::Action_Enter');
 }
 
 sub Action_ModifyNet {
@@ -200,6 +200,15 @@ sub Action_ModifyNet {
     my @items = $self->ItemList($prefs, $admin, $base, 'netName');
     return $self->Action_Reset($wiz) unless @items;
     if(@items == 1) {
+	# Hack: If there's only one net, pick it up immediately.
+	# We need to load the class and bless ... :-(
+	if ($action =~ /(.*)::/) {
+	    my $class = $1;
+	    my $cl = "$class.pm";
+	    $cl =~ s/\:\:/\//g;
+	    require $cl;
+	    bless $self, $class;
+	}
 	$wiz->param('ldap-net', $items[0]);
 	return $self->$action($wiz);
     }
@@ -244,10 +253,10 @@ sub Action_DeleteNet {
 sub Action_DeleteNet2 {
     my ($self, $wiz) = @_;
     my($prefs, $admin) = $self->init();
-    my $net = $wiz->param('ldap-net') || die "Missing net.";
-    my $dn = "network=$net, " . $prefs->{'ldap-prefs-netbase'};
+    my $netname = $wiz->param('ldap-net') || die "Missing net.";
+    my $dn = "network=$netname, " . $prefs->{'ldap-prefs-netbase'};
     my $net = $self->Load($wiz, $prefs, $admin, $dn);
-    
+
     (['Wizard::Elem::Title', 'value' => 'Deleting an LDAP Net ' . 
       '(and all the hosts belonging to it)'],
      ['Wizard::Elem::Data', 'descr' => 'Net name',
@@ -275,13 +284,13 @@ sub Action_DeleteNet2 {
      ['Wizard::Elem::Submit', 'value' => 'Return to Net Menu',
       'id' => 98, 'name' => 'Action_Reset'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'id' => 99, 'name' => 'Wizard::Examples::LDAP::Action_Reset']);
+      'id' => 99, 'name' => 'Wizard::LDAP::Action_Reset']);
 }
 
 sub Action_DeleteNet3 {
     my($self, $wiz) = @_;
     my($prefs, $admin, $net) = $self->init(1);
-    my ($prefs, $admin) = $self->init();
+    ($prefs, $admin) = $self->init();
     my $base =  "network=" . $net->{'ldap-net-netname'} . ", " . $prefs->{'ldap-prefs-netbase'};
     my $mesg = $self->ItemList($prefs, $admin, $base, 'objectClass');
     my $entry;

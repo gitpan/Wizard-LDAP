@@ -12,7 +12,7 @@ my $script = <<'END_OF_SCRIPT';
 
 use strict;
 
-use Wizard::Examples::LDAP::Config ();
+use Wizard::LDAP::Config ();
 use Wizard::SaveAble::LDAP ();
 use Getopt::Long ();
 use Net::LDAP ();
@@ -31,6 +31,12 @@ my $VAR_NAMED = "/var/named";
 my $NDC_RELOAD = "/usr/sbin/ndc reload";
 
 use vars qw($debug $verbose);
+
+$ENV{'PATH'} = '/bin:/usr/bin'; # See "perldoc perlsec"
+delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+$> = $< = 0;
+
 
 ############################################################################
 #
@@ -278,7 +284,7 @@ sub MakeHosts {
 	while (@list) {
 	    my $name = shift @list;
 	    my $ip = shift @list;
-	    $hosts .= "$name IN A $ip\n";
+	    $hosts .= "$name\t\tIN A $ip\n";
 	}
 	MakeFile("$VAR_NAMED/db.$a", "; ", "AUTOMATICALLY GENERATED", $hosts,
 		 "$VAR_NAMED/db.hosts.template");
@@ -290,7 +296,7 @@ sub MakeHosts {
 	while (@list) {
 	    my $ip = shift @list;
 	    my $name = shift @list;
-	    $hosts .= "$ip IN PTR $name\n";
+	    $hosts .= "$ip\t\tIN PTR $name\n";
 	}
 	MakeFile("$VAR_NAMED/db.$ptr", "; ", "AUTOMATICALLY GENERATED", $hosts,
 		 "$VAR_NAMED/db.ips.template");
@@ -308,7 +314,7 @@ sub MakeHosts {
 ############################################################################
 
 eval {
-    my $pfile = $Wizard::Examples::LDAP::Config::config->{'ldap-prefs-file'};
+    my $pfile = $Wizard::LDAP::Config::config->{'ldap-prefs-file'};
     my $cfg = eval { require $pfile }
         or die "Failed to read LDAP prefs from $pfile: $@";
 

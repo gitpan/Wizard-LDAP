@@ -1,7 +1,7 @@
-dn: topic=user, <YOUR_BASE>
+dn: topic=user, dc=saacke-pforzheim, dc=de
 name: user 
 objectclass: topic
 
-dn: topic=net, <YOUR_BASE>
+dn: topic=net, dc=saacke-pforzheim, dc=de
 name: net 
 objectclass: topic

@@ -6,10 +6,10 @@ $| = 1;
 $^W = 1;
 
 
-my @modules = qw(Wizard::Examples::LDAP
-	         Wizard::Examples::LDAP::Host
-	         Wizard::Examples::LDAP::Net
-	         Wizard::Examples::LDAP::User
+my @modules = qw(Wizard::LDAP
+	         Wizard::DAP::Host
+	         Wizard::LDAP::Net
+	         Wizard::LDAP::User
 		 Wizard::SaveAble::LDAP);
 
 

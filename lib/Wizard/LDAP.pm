@@ -4,12 +4,12 @@ use Socket ();
 use Wizard ();
 use Wizard::State ();
 use Wizard::SaveAble();
-use Wizard::Examples::LDAP::Config ();
+use Wizard::LDAP::Config ();
 
-package Wizard::Examples::LDAP;
+package Wizard::LDAP;
 
-@Wizard::Examples::LDAP::ISA = qw(Wizard::State);
-$Wizard::Examples::LDAP::VERSION = '0.1004';
+@Wizard::LDAP::ISA = qw(Wizard::State);
+$Wizard::LDAP::VERSION = '0.1005';
 
 sub init {
     my $self = shift; 
@@ -24,7 +24,7 @@ sub Action_Reset {
 
     # Load prefs, if required.
     unless ($self->{'prefs'}) {
-	my $cfg = $Wizard::Examples::LDAP::Config::config;
+	my $cfg = $Wizard::LDAP::Config::config;
 	my $file = $cfg->{'ldap-prefs-file'};
 	$self->{'prefs'} = Wizard::SaveAble->new('file' => $file, 'load' => 1);
     }
@@ -33,10 +33,10 @@ sub Action_Reset {
     # Return the initial menu.
     (['Wizard::Elem::Title', 'value' => 'LDAP Wizard Menu '],
      ['Wizard::Elem::Submit', 'value' => 'User Menu',
-      'name' => 'Wizard::Examples::LDAP::User::Action_Reset',
+      'name' => 'Wizard::LDAP::User::Action_Reset',
       'id' => 1],
      ['Wizard::Elem::Submit', 'value' => 'Net Menu',
-      'name' => 'Wizard::Examples::LDAP::Net::Action_Reset',
+      'name' => 'Wizard::LDAP::Net::Action_Reset',
       'id' => 2],
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'value' => 'LDAP Wizard preferences',
@@ -197,5 +197,181 @@ sub OnChange {
 }
 
 
+1;
 
 
+__END__
+
+=pod
+
+=head1 NAME
+
+Wizard::LDAP - Administration interface for your LDAP server
+
+
+=head1 SYNOPSIS
+
+  # From the shell:
+  ldapWizard
+
+  # Or, from the WWW:
+  <a href="ldap.ep">LDAP administraton</a>
+
+
+=head1 DESCRIPTION
+
+This is a package for administration of an LDAP server. It allows to
+feed users, hosts and networks into the server.
+
+
+=head1 INSTALLATION
+
+First of all, you have to install the prerequisites. There are lots
+of:
+
+=over
+
+=item An LDAP Server
+
+You need some LDAP server. We are using the OpenLDAP server, see
+
+  http://www.openldap.org/
+
+In theory any other LDAP server should do, but the servers configuration
+might be different.
+
+A source RPM for Red Hat Linux is available on demand.
+
+To configure the LDAP server, edit the file F<topics.ldif> from the
+distribution. Currently it looks like
+
+  dn: topic=user, dc=ispsoft, dc=de
+  name: user 
+  objectclass: topic
+
+  dn: topic=net, dc=ispsoft, dc=de
+  name: net 
+  objectclass: topic
+
+Change "dc=ispsoft, dc=de" to reflect your local settings. For example,
+if you are using the mail domain "mycompany.com", then you might choose
+
+  dc=mycompany, dc=com
+
+Import the file into your LDAP server by using the command
+
+  ldif2ldbm -i topics.ldif
+
+(The above command will trash an existing LDAP database! Use ldapadd
+if you want to avoid this.)
+
+Append the files F<slapd.at.conf.APPEND> and F<slapd.oc.conf.APPEND>
+to your F</etc/openldap/slapd.at.conf> and F</etc/openldap/slapd.oc.conf>
+and restart the OpenLDAP server.
+
+=item IO::AtomicFile
+
+This is a Perl package for atomic operations on important files.
+
+=item HTML::EP
+
+If you like to use the WWW administration interface, you need the
+embedded Perl system HTML::EP.
+
+=item Wizard
+
+Another Perl module, available at the same place.
+
+=item Convert::BER
+
+=item Net::LDAP
+
+To talk to the LDAP server, we use Graham Barr's Net::LDAP package.
+It is written in 100% Perl, no underlying C library required.
+
+=back
+
+All the above packages are available on any CPAN mirror, for example
+
+  ftp://ftp.funet.fi/pub/languages/perl/CPAN/authors/id
+
+or perhaps at the same place where you found this file. :-)
+
+Note that some of the packages have their own requirements. For
+example, HTML::EP depends on libwww and the MailTools. If so, you
+will be told while installing the modules. See below for the
+installation of the Perl modules.
+
+
+=head2 Installing the Perl modules
+
+Installing a Perl module is always the same:
+
+  gzip -cd Wizard-LDAP-0.1005.tar.gz | tar xf -
+  cd Wizard-LDAP-0.1005
+  perl Makefile.PL
+  make
+  make test
+  make install
+
+Alternatively you might try using the automatic installation that the
+CPAN module offers you:
+
+  perl -MCPAN -e shell
+  install IO::AtomicFile
+  install Bundle::HTML::EP
+  install Bundle::Wizard
+  install Convert::BER
+  install Net::LDAP
+  install Wizard::LDAP
+
+Note that some of the modules, in particular HTML::EP, need additional
+configuration tasks, for example modifying the web servers configuration
+files.
+
+
+=head2 Some final tasks
+
+You have to create a directory F</etc/LDAP-Wizard> and make it owned
+by the httpd user, so that CGI binaries can write into this directory.
+
+Copy the file F<ldap.ep> into your web servers root directory. (I
+choose F</home/httpd/html/admin/ldap.ep> on my Red Hat Linux box.)
+
+Point your browser too the corresponding location, for example
+
+  http://localhost/admin/ldap.ep
+
+Start with modifying the preferences.
+
+
+=head1 AUTHORS AND COPYRIGHT
+
+This module is
+
+  Copyright (C) 1999     Jochen Wiedmann
+                         Am Eisteich 9
+                         72555 Metzingen
+                         Germany
+
+                         Email: joe@ispsoft.de
+
+                 and     Amarendran R. Subramanian
+                         Grundstr. 32
+                         72810 Gomaringen
+                         Germany
+
+                         Email: amar@ispsoft.de
+
+All Rights Reserved.
+
+You may distribute under the terms of either the GNU
+General Public License or the Artistic License, as
+specified in the Perl README file.
+
+
+=head1 SEE ALSO
+
+L<Wizard(3)>, L<ldapWizard(1)>, L<HTML::EP(3)>, L<Net::LDAP(3)>
+
+=cut

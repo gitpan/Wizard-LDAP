@@ -8,13 +8,13 @@ use Wizard ();
 use Wizard::State ();
 use Wizard::SaveAble ();
 use Wizard::SaveAble::LDAP ();
-use Wizard::Examples::LDAP ();
-use Wizard::Examples::LDAP::Config ();
+use Wizard::LDAP ();
+use Wizard::LDAP::Config ();
 
-@Wizard::Examples::LDAP::User::ISA = qw(Wizard::Examples::LDAP);
-$Wizard::Examples::LDAP::User::VERSION = '0.01';
+@Wizard::LDAP::User::ISA = qw(Wizard::LDAP);
+$Wizard::LDAP::User::VERSION = '0.01';
 
-package Wizard::Examples::LDAP::User;
+package Wizard::LDAP::User;
 
 my $RESOLVE_SHELL = { 'mail' => '/bin/mailonly', 'ftp' => '/bin/ftp_mail', 
 		      'admin' => '/bin/bash'};
@@ -74,7 +74,7 @@ sub ShowMe {
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'name' => 'Action_Reset',
       'value' => 'Return to User menu', 'id' => 98],
-     ['Wizard::Elem::Submit', 'name' => 'Wizard::Examples::LDAP::Action_Reset',
+     ['Wizard::Elem::Submit', 'name' => 'Wizard::LDAP::Action_Reset',
       'value' => 'Return to top menu', 'id' => 99]);
 }
 
@@ -99,7 +99,7 @@ sub Action_Reset {
       'id' => 3],
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'name' => 'Wizard::Examples::LDAP::Action_Reset',
+      'name' => 'Wizard::LDAP::Action_Reset',
       'id' => 98],
      ['Wizard::Elem::Submit', 'value' => 'Exit LDAP Wizard',
       'id' => 99]);
@@ -169,7 +169,7 @@ sub Action_UserSave {
     $user->AttrScalar2Ref('mail', 'mailforward', 'maildrop');
     my $opts = delete $user->{'_options'} || {};
     my $opt = delete $user->{'ldap-user-chooseopt'} || '';
-    my $opt = $opts->{$opt} if exists($opts->{$opt});
+    $opt = $opts->{$opt} if exists($opts->{$opt});
     
     my @hook = ('-new', {'user' => $user->{'ldap-user-uid'}, 'options' => $opt, 
 			 'uid' => $user->{'ldap-user-uidnumber'}});
@@ -314,7 +314,7 @@ sub Action_DeleteUser2 {
      ['Wizard::Elem::Submit', 'value' => 'Return to User Menu',
       'id' => 98, 'name' => 'Action_Reset'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'id' => 99, 'name' => 'Wizard::Examples::LDAP::Action_Reset']);
+      'id' => 99, 'name' => 'Wizard::LDAP::Action_Reset']);
 }
 
 sub Action_DeleteUser3 {

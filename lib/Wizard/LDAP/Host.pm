@@ -9,14 +9,14 @@ use Wizard ();
 use Wizard::State ();
 use Wizard::SaveAble ();
 use Wizard::SaveAble::LDAP ();
-use Wizard::Examples::LDAP ();
-use Wizard::Examples::LDAP::Net();
-use Wizard::Examples::LDAP::Config ();
+use Wizard::LDAP ();
+use Wizard::LDAP::Net();
+use Wizard::LDAP::Config ();
 
-@Wizard::Examples::LDAP::Host::ISA = qw(Wizard::Examples::LDAP::Net);
-$Wizard::Examples::LDAP::Host::VERSION = '0.01';
+@Wizard::LDAP::Host::ISA = qw(Wizard::LDAP::Net);
+$Wizard::LDAP::Host::VERSION = '0.01';
 
-package Wizard::Examples::LDAP::Host;
+package Wizard::LDAP::Host;
 
 sub init {
     my $self = shift; 
@@ -52,9 +52,9 @@ sub ShowMe {
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'name' => 'Action_Reset',
       'value' => 'Return to Host menu', 'id' => 97],
-     ['Wizard::Elem::Submit', 'name' => 'Wizard::Examples::LDAP::Net::Action_Reset',
+     ['Wizard::Elem::Submit', 'name' => 'Wizard::LDAP::Net::Action_Reset',
       'value' => 'Return to Net menu', 'id' => 98],
-     ['Wizard::Elem::Submit', 'name' => 'Wizard::Examples::LDAP::Action_Reset',
+     ['Wizard::Elem::Submit', 'name' => 'Wizard::LDAP::Action_Reset',
       'value' => 'Return to top menu', 'id' => 99]);
 }
 
@@ -88,10 +88,10 @@ sub Action_Reset {
       'id' => 4],
      ['Wizard::Elem::BR'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'name' => 'Wizard::Examples::LDAP::Action_Reset',
+      'name' => 'Wizard::LDAP::Action_Reset',
       'id' => 97],
      ['Wizard::Elem::Submit', 'value' => 'Return to Net Menu',
-      'name' => 'Wizard::Examples::LDAP::Net::Action_Reset',
+      'name' => 'Wizard::LDAP::Net::Action_Reset',
       'id' => 98],
      ['Wizard::Elem::Submit', 'value' => 'Exit LDAP Wizard',
       'id' => 99]);
@@ -243,8 +243,7 @@ sub Action_EditHost {
     my($prefs, $admin, $net) = $self->init();
     my $host = $wiz->param('ldap-host') || die "Missing host name.";
     my $dn = "host=$host, network=" . $net->{'ldap-net-netname'} . ', ' . $prefs->{'ldap-prefs-netbase'};
-    my $host = $self->Load($wiz, $prefs, $admin, $dn);
-    $self->ShowMe($wiz, $prefs, $host);
+    $self->ShowMe($wiz, $prefs, $self->Load($wiz, $prefs, $admin, $dn));
 }
 
 sub Action_DeleteHost {
@@ -254,10 +253,10 @@ sub Action_DeleteHost {
 sub Action_DeleteHost2 {
     my ($self, $wiz) = @_;
     my($prefs, $admin, $net) = $self->init();
-    my $host = $wiz->param('ldap-host') || die "Missing host.";
-    my $dn = "host=$host, network=" . $net->{'ldap-net-netname'} . ', ' . $prefs->{'ldap-prefs-netbase'};
+    my $hostname = $wiz->param('ldap-host') || die "Missing host.";
+    my $dn = "host=$hostname, network=" . $net->{'ldap-net-netname'} . ', ' . $prefs->{'ldap-prefs-netbase'};
     my $host = $self->Load($wiz, $prefs, $admin, $dn);
-    
+
     (['Wizard::Elem::Title', 'value' => 'Deleting an LDAP Host'],
      ['Wizard::Elem::Data', 'descr' => 'Host name',
       'value' => $host->{'ldap-host-hostname'}],
@@ -274,9 +273,9 @@ sub Action_DeleteHost2 {
      ['Wizard::Elem::Submit', 'value' => 'Return to Host Menu',
       'id' => 97, 'name' => 'Action_Reset'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Net Menu',
-      'id' => 98, 'name' => 'Wizard::Examples::LDAP::Net::Action_Reset'],
+      'id' => 98, 'name' => 'Wizard::LDAP::Net::Action_Reset'],
      ['Wizard::Elem::Submit', 'value' => 'Return to Top Menu',
-      'id' => 99, 'name' => 'Wizard::Examples::LDAP::Action_Reset']);
+      'id' => 99, 'name' => 'Wizard::LDAP::Action_Reset']);
 }
 
 sub Action_DeleteHost3 {
