@@ -184,6 +184,8 @@ sub Store {
 	    $mesg = $ldap->delete(dn => $old_dn);
 	    die "Error deleting old entry '$old_dn', code=" . $mesg->code
 		. " error=" . $mesg->error . "." if $mesg->code;
+	    $self->LDAPUnbind();
+	    $ldap = $self->LDAPBind();
 	    $mesg = $ldap->add(dn => $dn, attr => $attr) 
 		or die "Error while adding $dn: $@";
 	} else {

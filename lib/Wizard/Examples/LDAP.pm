@@ -9,7 +9,7 @@ use Wizard::Examples::LDAP::Config ();
 package Wizard::Examples::LDAP;
 
 @Wizard::Examples::LDAP::ISA = qw(Wizard::State);
-$Wizard::Examples::LDAP::VERSION = '0.1003';
+$Wizard::Examples::LDAP::VERSION = '0.1004';
 
 sub init {
     my $self = shift; 
@@ -129,7 +129,7 @@ sub ItemList {
     my $mesg = $ldap->search(base => $base,
 			     filter => $key . '=*',
 			     scope => 1);
-    die "Following error occured while searching: code=" . $mesg->code
+    die "Following error occured while searching for $base: code=" . $mesg->code
 	. ", error=" . $mesg->error  if $mesg->code;
 
     my @items = map { ($_->get($key)) } $mesg->entries;
